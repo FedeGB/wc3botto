@@ -1,0 +1,11 @@
+{
+  "name": "Mr-Wc3botto",
+  "version": "1.0.0",
+  "description": "Wc3 tiene bot de discord",
+  "main": "bot.js",
+  "author": "Verrigombia",
+  "dependencies": {
+    "discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
+    "winston": "^2.*"
+  }
+}
