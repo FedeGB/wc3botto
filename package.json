@@ -10,7 +10,8 @@
     "url": "https://github.com/FedeGB/wc3botto"
   },
   "scripts": {
-    "start": "node -r dotenv/config ./dist/bot.js",
+    "start": "node ./dist/bot.js",
+    "dev": "node -r dotenv/config ./dist/bot.js",
     "postinstall": "tsc",
     "build": "tsc"
   },
