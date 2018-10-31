@@ -2,10 +2,23 @@
   "name": "Mr-Wc3botto",
   "version": "1.0.0",
   "description": "Wc3 tiene bot de discord",
-  "main": "bot.js",
+  "main": "./dist/bot.js",
   "author": "Verrigombia",
+  "scripts": {
+    "start": "node ./dist/bot.js",
+    "postinstall": "tsc",
+    "build": "tsc"
+  },
   "dependencies": {
-    "discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
-    "winston": "^2.*"
+    "discord.js": "^11.4.2",
+    "ffmpeg-binaries": "^4.0.0",
+    "node-opus": "^0.3.0",
+    "winston": "^3.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^10.12.0",
+    "codelyzer": "^4.5.0",
+    "tslint": "^5.11.0",
+    "typescript": "^3.1.3"
   }
 }
