@@ -144,10 +144,11 @@ const playAudioFile = (voiceConnection: Discord.VoiceConnection, fileName: strin
 }
 
 const scheduleAnthem = () => {
-    const now = new Date(Date.now());
-    let tomorrow = new Date(now);
-    tomorrow.setDate(now.getDate() + 1);
-    tomorrow.setUTCHours(3, 0, 0, 0);       // Midnight in Argentina
+    const argOffset = -3;
+    const argNow = new Date(Date.now() + argOffset * 3600 * 1000);      // UTC time moved to GMT-0300 Arg Standard Time
+    let argTomorrow = new Date(argNow);
+    argTomorrow.setUTCDate(argNow.getUTCDate() + 1);
+    argTomorrow.setUTCHours(0, 0, 0, 0);
     
     client.setTimeout(() => {
         client.channels.forEach((channel: Discord.Channel) => {
@@ -165,8 +166,8 @@ const scheduleAnthem = () => {
                 }
             }
         });
-        scheduleAnthem();
-    }, tomorrow.valueOf() - now.valueOf());
+        // scheduleAnthem();
+    }, argTomorrow.valueOf() - argNow.valueOf());
 }
 
 client.login(CONFIG.token);
