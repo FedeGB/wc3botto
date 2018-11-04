@@ -117,6 +117,14 @@ client.on("message", (message: Discord.Message) => {
                                 playAudioFile(voiceConnection, "himno-arg.mp3", 0.5);
                                 break;
 
+                            case "vino":
+                                playAudioFile(voiceConnection, "vino.mp3", 1);
+                                break;
+
+                            case "nunu":
+                                playAudioFile(voiceConnection, "tren-cielo.mp3", 0.4);
+                                break;
+
                             default:
                                 break;
                         }
@@ -149,7 +157,7 @@ const explain = (channel: Discord.TextChannel | Discord.DMChannel | Discord.Grou
     channel.send(
         "// Comandos:\n" +
             "!summon - Meter al bot al canal de voz en el que estás.\n" +
-            "!play   - Reproducir música en el canal de voz en el que está el bot (marcha / himno).\n" +
+            "!play   - Reproducir música en el canal de voz en el que está el bot (marcha / himno / nunu / vino).\n" +
             "!stop   - Parar la música que está reproduciendo.\n" +
             "!kick   - Sacar al bot del canal de voz.\n" +
             "!help   - Este texto.",
