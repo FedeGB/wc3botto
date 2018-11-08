@@ -32,7 +32,6 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 const client = new Discord.Client();
-// const playingAnthemChannelsId: string[] = [];
 const manager = new Manager(logger);
 
 client.on("ready", () => {
@@ -55,138 +54,10 @@ client.on("message", (message: Discord.Message) => {
     if (msg[0] === "!") {
         const commandExec = handler.getCommand(client, message, logger, manager);
         commandExec.execute();
-/*        const args = msg.substring(1).split(" ");
-        const cmd = args[0];
-
-        switch (cmd) {
-            case "ping":
-                message.channel.send("pong");
-                break;
-
-            case "help":
-                explain(message.channel);
-                break;
-
-            case "summon":
-                if (message.member.voiceChannel) {
-                    if (message.member.voiceChannel.members.has(client.user.id)) {
-                        message.channel.send("Pero ya estoy metido en el canal de voz...");
-                        return;
-                    }
-                    message.member.voiceChannel.join().then((connection) =>
-                        connection.on("error", (error: Error) => {
-                            logger.log("error", error.message);
-                        })
-                    );
-                } else {
-                    message.channel.send("Tenés que estar en un canal de voz para llamarme, salame.");
-                }
-                break;
-
-            case "kick":
-                if (message.member.voiceChannel) {
-                    if (!message.member.voiceChannel.members.has(client.user.id)) {
-                        message.channel.send("Pero no estoy metido en el canal de voz...");
-                        return;
-                    } else if (playingAnthemChannelsId.indexOf(message.member.voiceChannelID) !== -1) {
-                        message.reply("¿Cómo osas intentar detener el himno de nuestra querida nación? Maldito vende patria.");
-                        return;
-                    }
-                    const voiceConnection = client.voiceConnections.get(message.guild.id);
-                    if (voiceConnection) {
-                        if (voiceConnection.dispatcher) {
-                            voiceConnection.dispatcher.end();
-                        }
-                        voiceConnection.disconnect();
-                    }
-                } else {
-                    message.channel.send("Tenés que estar en mi mismo canal de voz para echarme, salame.");
-                }
-                break;
-
-            case "play":
-                if (message.member.voiceChannel && args.length > 1) {
-                    if (playingAnthemChannelsId.indexOf(message.member.voiceChannelID) !== -1) {
-                        message.channel.send(
-                            "No se puede reproducir otra cosa hasta que no termine el gran himno de todos los argentinos."
-                        );
-                        return;
-                    }
-                    const voiceConnection = client.voiceConnections.get(message.guild.id);
-                    if (voiceConnection) {
-                        switch (args[1]) {
-                            case "marcha":
-                                playAudioFile(voiceConnection, "marcha.mp3", 0.5);
-                                break;
-
-                            case "himno":
-                                playAudioFile(voiceConnection, "himno-arg.mp3", 0.5);
-                                break;
-
-                            case "vino":
-                                playAudioFile(voiceConnection, "vino.mp3", 1);
-                                break;
-
-                            case "nunu":
-                                playAudioFile(voiceConnection, "tren-cielo.mp3", 0.4);
-                                break;
-
-                            default:
-                                break;
-                        }
-                    }
-                }
-                break;
-
-            case "stop":
-                if (message.member.voiceChannel) {
-                    if (playingAnthemChannelsId.indexOf(message.member.voiceChannelID) !== -1) {
-                        message.reply("¿Cómo osas intentar detener el himno de nuestra querida nación? Maldito vende patria.");
-                        return;
-                    }
-                    const voiceConnection = client.voiceConnections.get(message.guild.id);
-                    if (voiceConnection) {
-                        voiceConnection.dispatcher.end();
-                    }
-                }
-                break;
-
-            default:
-                break;
-        }*/
     } else if (msg.toLowerCase().includes("punto")) {
         message.reply("*puto");
     }
 });
-
-/*const explain = (channel: Discord.TextChannel | Discord.DMChannel | Discord.GroupDMChannel): void => {
-    channel.send(
-        "// Comandos:\n" +
-            "!summon - Meter al bot al canal de voz en el que estás.\n" +
-            "!play   - Reproducir música en el canal de voz en el que está el bot (marcha / himno / nunu / vino).\n" +
-            "!stop   - Parar la música que está reproduciendo.\n" +
-            "!kick   - Sacar al bot del canal de voz.\n" +
-            "!help   - Este texto.",
-        { code: true }
-    );
-};
-
-const playAudioFile = (
-    voiceConnection: Discord.VoiceConnection,
-    fileName: string,
-    playVolume: number = 1
-): Discord.StreamDispatcher => {
-    const filePath = __dirname + "/../assets/audio/" + fileName;
-    const dispatcher = voiceConnection.playFile(filePath, {
-        volume: playVolume
-    });
-
-    dispatcher.on("error", (error: Error) => {
-        logger.log("error", error.message);
-    });
-
-    return dispatcher;
-};*/
 
 const scheduleAnthem = () => {
     const argOffset = -3;
