@@ -1,6 +1,8 @@
 import * as Discord from "discord.js";
 import * as Winston from "winston";
 import { CONFIG } from "./config";
+import { CommandHandler } from "./commands/commandhandler";
+import { Manager } from "./manager";
 
 // Configure Logger
 const myFormat = Winston.format.printf((info) => {
@@ -30,7 +32,8 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 const client = new Discord.Client();
-const playingAnthemChannelsId: string[] = [];
+// const playingAnthemChannelsId: string[] = [];
+const manager = new Manager(logger);
 
 client.on("ready", () => {
     logger.log("info", `Logged in as ${client.user.tag}`);
@@ -46,10 +49,13 @@ client.on("disconnect", (event) => {
     client.login(CONFIG.token);
 });
 
+const handler = new CommandHandler();
 client.on("message", (message: Discord.Message) => {
     const msg = message.content.trim();
     if (msg[0] === "!") {
-        const args = msg.substring(1).split(" ");
+        const commandExec = handler.getCommand(client, message, logger, manager);
+        commandExec.execute();
+/*        const args = msg.substring(1).split(" ");
         const cmd = args[0];
 
         switch (cmd) {
@@ -147,13 +153,13 @@ client.on("message", (message: Discord.Message) => {
 
             default:
                 break;
-        }
+        }*/
     } else if (msg.toLowerCase().includes("punto")) {
         message.reply("*puto");
     }
 });
 
-const explain = (channel: Discord.TextChannel | Discord.DMChannel | Discord.GroupDMChannel): void => {
+/*const explain = (channel: Discord.TextChannel | Discord.DMChannel | Discord.GroupDMChannel): void => {
     channel.send(
         "// Comandos:\n" +
             "!summon - Meter al bot al canal de voz en el que estás.\n" +
@@ -180,7 +186,7 @@ const playAudioFile = (
     });
 
     return dispatcher;
-};
+};*/
 
 const scheduleAnthem = () => {
     const argOffset = -3;
@@ -195,12 +201,12 @@ const scheduleAnthem = () => {
                 const voiceChannel: Discord.VoiceChannel = channel as Discord.VoiceChannel;
                 if (voiceChannel.members.size > 0) {
                     voiceChannel.join().then((voiceConnection: Discord.VoiceConnection) => {
-                        playingAnthemChannelsId.push(voiceChannel.id);
-                        const dispatcher = playAudioFile(voiceConnection, "himno-arg.mp3", 0.25);
+                        manager.addChannelIdAnthem(voiceChannel.id);
+                        const dispatcher = manager.playAudioFile(voiceConnection, "himno-arg.mp3", 0.25);
                         client.setTimeout(() => {
                             dispatcher.end();
                             voiceConnection.disconnect();
-                            playingAnthemChannelsId.splice(playingAnthemChannelsId.indexOf(voiceChannel.id), 1);
+                            manager.removeChannelIdAnthem(voiceChannel.id);
                         }, (3 * 60 + 58) * 1000);
                     });
                 }
