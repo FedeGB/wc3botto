@@ -28,7 +28,7 @@ class CommandHandler {
 		if(command.toLowerCase() in this.commands) {
 			com = new this.commands[command.toLowerCase()](client, message, logger, manager);
 		} else {
-			com = Command;
+			com = new Command(client, message, logger, manager);
 		}
 		return com;
 	}
