@@ -1,5 +1,5 @@
 export const CONFIG = {
+    cmdPrefix: "!",
     env: process.env.NODE_ENV,
-    prefix: "!",
     token: process.env.TOKEN,
 };

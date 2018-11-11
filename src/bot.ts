@@ -49,11 +49,24 @@ export class Bot {
     }
 
     public handleMessage(message: Message): IResponse | null {
-        if (!message.content.startsWith(CONFIG.prefix) || message.author.bot) {
+        if (message.author.bot) {
             return null;
         }
 
-        const args = message.content.slice(CONFIG.prefix.length).split(" ");
+        if (!message.content.startsWith(CONFIG.cmdPrefix)) {
+            const lowerCaseMsg = message.content.toLowerCase();
+            if (lowerCaseMsg.includes("punto")) {
+                message.reply("*puto");
+            } else if (lowerCaseMsg.includes("verga")) {
+                message.channel.send("Jejeje, dijo verga.");
+            } else if (lowerCaseMsg.includes("pito")) {
+                message.channel.send("Jejeje, dijo pito.");
+            }
+
+            return null;
+        }
+
+        const args = message.content.slice(CONFIG.cmdPrefix.length).split(" ");
         let controllerName = args.shift();
         if (!controllerName) {
             return null;
@@ -97,7 +110,6 @@ const initControllers = () => {
         import(filePath)
             .then((controller: IController) => {
                 controllers.set(controller.name, controller);
-                logger.log("info", `Loaded ${controller.name} controller.`);
             })
             .catch((reason) => {
                 logger.log("error", `Failed to import file: ${reason}`);
