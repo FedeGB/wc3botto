@@ -1,3 +1,5 @@
 export const CONFIG = {
-	token: process.env.TOKEN
-}
+    env: process.env.NODE_ENV,
+    prefix: "!",
+    token: process.env.TOKEN,
+};
