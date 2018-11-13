@@ -125,6 +125,10 @@ client.on("message", (message: Discord.Message) => {
                                 playAudioFile(voiceConnection, "tren-cielo.mp3", 0.4);
                                 break;
 
+                            case "cabral":
+                                playAudioFile(voiceConnection, "cabral.mp3", 0.5);
+                                break;
+
                             default:
                                 break;
                         }
