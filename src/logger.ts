@@ -1,10 +1,4 @@
-import * as fs from "fs";
 import * as Winston from "winston";
-
-// Create logs dir if it doesn't exist
-if (!fs.existsSync("../logs")) {
-    fs.mkdirSync("../logs");
-}
 
 // Configure Logger
 const myFormat = Winston.format.printf((info) => {

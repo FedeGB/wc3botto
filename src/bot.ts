@@ -17,7 +17,6 @@ export class Bot {
         this.controllers = initControllers();
     }
 
-
     public scheduleAnthem(): void {
         const argOffset = -3;
         const argNow = new Date(Date.now() + argOffset * 3600 * 1000); // UTC time moved to GMT-0300 Arg Standard Time
@@ -75,7 +74,7 @@ export class Bot {
 
         controllerName = controllerName.toLowerCase();
 
-        if (CONFIG.env === "dev") {
+        if (CONFIG.env !== "production") {
             if (!controllerName.endsWith("-dev")) {
                 return null;
             }
