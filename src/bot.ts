@@ -22,7 +22,7 @@ export class Bot {
         const argNow = new Date(Date.now() + argOffset * 3600 * 1000); // UTC time moved to GMT-0300 Arg Standard Time
         const argTomorrow = new Date(argNow);
         argTomorrow.setUTCDate(argNow.getUTCDate() + 1);
-        argTomorrow.setUTCHours(3, 23, 0, 0);
+        argTomorrow.setUTCHours(0, 0, 0, 0);
 
         this.client.setTimeout(() => {
             this.client.channels.forEach((channel: Channel) => {
