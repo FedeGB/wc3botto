@@ -42,7 +42,12 @@ const playController: IController = {
 
                 case "cabral":
                     playAudioFile(voiceConnection, "cabral.mp3", 0.5);
+                    break;
 
+                case "bad":
+                    playAudioFile(voiceConnection, "bad.mp3", 0.5);
+                    break;
+                    
                 default:
                     break;
             }
