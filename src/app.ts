@@ -1,3 +1,5 @@
+// Hack for now server
+require('http').createServer().listen(3000)
 import { Message } from "discord.js";
 
 import { Bot } from "./bot";
@@ -31,6 +33,3 @@ bot.client.on("message", (message: Message) => {
 });
 
 bot.client.login(CONFIG.token);
-
-// Hack for now server
-require('http').createServer().listen(3000)
