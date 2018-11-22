@@ -31,3 +31,6 @@ bot.client.on("message", (message: Message) => {
 });
 
 bot.client.login(CONFIG.token);
+
+// Hack for now server
+require('http').createServer().listen(3000)
