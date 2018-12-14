@@ -11,7 +11,7 @@ const helpController: IController = {
             "Lista de comandos:\n\n" +
                 "!summon         - Meter al bot al canal de voz en el que estás.\n" +
                 "!play [audio]   - Reproducir música en el canal de voz en el que está el bot.\n" +
-                "\t[audio] = himno | marcha | nunu | vino | cabral | bad\n" +
+                "\t[audio] = himno | marcha | nunu | vino | cabral | bad | patria\n" +
                 "!stop           - Parar la música que está reproduciendo.\n" +
                 "!kick           - Sacar al bot del canal de voz.\n" +
                 "!help           - Este texto.",
