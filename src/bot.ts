@@ -1,4 +1,4 @@
-import { Channel, Client, Collection, Message, VoiceChannel, VoiceConnection, TextChannel } from "discord.js";
+import { Channel, Client, Collection, Message, TextChannel, VoiceChannel, VoiceConnection } from "discord.js";
 import { readdirSync } from "fs";
 
 import { CONFIG } from "./config";
@@ -42,13 +42,14 @@ export class Bot {
                             }, (3 * 60 + 58) * 1000);
                         });
                     } else {
-                        this.client.channels.forEach((channel: Channel) => {
-                            if (channel.type === "text" && (channel as TextChannel).name === "canal-para-putos") {
-                                const chan = channel as TextChannel;
-                                logger.debug(`Channel ID: ${chan.id}`);
-                                chan.send("Debería darles vergüenza no estar presentes para entonar las estrofas de nuestro gran himno nacional.");
+                        this.client.channels.forEach((chan: Channel) => {
+                            if (chan.id === "428386268817260545") {     // canal-para-putos
+                                const ch = chan as TextChannel;
+                                ch.send(
+                                    "Debería darles vergüenza no estar presentes para entonar las estrofas de nuestro gran himno nacional."
+                                );
                             }
-                        })
+                        });
                     }
                 }
             });
