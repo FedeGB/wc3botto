@@ -23,14 +23,16 @@
   "dependencies": {
     "discord.js": "^11.4.2",
     "ffmpeg-binaries": "^4.0.0",
+    "mongoose": "^5.4.3",
     "node-opus": "^0.3.1",
     "tslib": "^1.9.3",
     "winston": "^3.1.0"
   },
   "devDependencies": {
-    "@types/node": "^10.12.5",
-    "dotenv": "^6.1.0",
-    "tslint": "^5.11.0",
-    "typescript": "^3.1.6"
+    "@types/mongoose": "^5.3.7",
+    "@types/node": "^10.12.18",
+    "dotenv": "^6.2.0",
+    "tslint": "^5.12.0",
+    "typescript": "^3.2.2"
   }
 }

@@ -4,17 +4,48 @@ import { readdirSync } from "fs";
 import { CONFIG } from "./config";
 import { playAudioFile } from "./helpers/playAudioFile.helper";
 import { logger } from "./logger";
+import { IListeningAnthemUser } from "./models/anthem-listener";
 import { IController } from "./models/controller";
 import { IResponse } from "./models/response";
 
 export class Bot {
-    public client: Client;
-    public controllers: Collection<string, IController>;
-    public channelsPlayingAnthemAt: string[] = [];
+    private client: Client;
+    private controllers: Collection<string, IController>;
+    private channelsPlayingAnthemAt: string[] = [];
+    private anthemListeners: Collection<string, IListeningAnthemUser[]> = new Collection();
 
     constructor() {
         this.client = new Client();
+
+        this.client.on("ready", () => {
+            logger.log("info", `Logged in as ${this.client.user.tag}`);
+            this.scheduleAnthem();
+        });
+
+        this.client.on("error", (error: Error) => {
+            logger.log("error", error.message);
+        });
+
+        this.client.on("disconnect", (event) => {
+            logger.log("info", `Bot disconnected. Code: ${event.code} - Description: ${event.description}`);
+            this.client.login(CONFIG.token);
+        });
+
+        this.client.on("message", (message: Message) => {
+            const response = this.handleMessage(message);
+
+            if (!response) {
+                return;
+            }
+
+            response.controller.execute(response.processedMsg, this, response.msgArgs);
+        });
+
         this.controllers = initControllers();
+    }
+
+    public login(token: string): void {
+        this.client.login(token);
     }
 
     public scheduleAnthem(): void {
@@ -30,20 +61,45 @@ export class Bot {
                     const voiceChannel: VoiceChannel = channel as VoiceChannel;
                     if (voiceChannel.members.size > 0) {
                         voiceChannel.join().then((voiceConnection: VoiceConnection) => {
+                            const anthemListeners: IListeningAnthemUser[] = new Array(voiceChannel.members.size);
+
+                            voiceChannel.members.forEach((user) => {
+                                const listener: IListeningAnthemUser = {
+                                    listeningStartTime: 0,
+                                    quitted: false,
+                                    totalListenedTime: 0,
+                                    userAlias: user.nickname,
+                                    userId: user.id,
+                                };
+                                anthemListeners.push(listener);
+                            });
+                            this.anthemListeners.set(voiceChannel.id, anthemListeners);
+
                             this.channelsPlayingAnthemAt.push(voiceChannel.id);
                             const dispatcher = playAudioFile(voiceConnection, "himno-arg.mp3", 0.25);
                             this.client.setTimeout(() => {
+
+                                // Stop playing and disconnect from voice channel
                                 dispatcher.end();
                                 voiceConnection.disconnect();
+
+                                // Remove from list of channels where anthem is being played
                                 this.channelsPlayingAnthemAt.splice(
                                     this.channelsPlayingAnthemAt.indexOf(voiceChannel.id),
                                     1
                                 );
+
+                                // Handle anthem listeners
+                                anthemListeners.forEach((listener) => {
+                                    listener.totalListenedTime += 3 * 60 + 58 - listener.listeningStartTime;
+                                });
+                                // MongoDBManager.save(anthemListeners)
                             }, (3 * 60 + 58) * 1000);
                         });
                     } else {
                         this.client.channels.forEach((chan: Channel) => {
-                            if (chan.id === "428386268817260545") {     // canal-para-putos
+                            if (chan.id === "428386268817260545") {
+                                // canal-para-putos
                                 const ch = chan as TextChannel;
                                 ch.send(
                                     "Debería darles vergüenza no estar presentes para entonar las estrofas de nuestro gran himno nacional."
