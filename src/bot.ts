@@ -1,4 +1,4 @@
-import { Channel, Client, Collection, Message, VoiceChannel, VoiceConnection } from "discord.js";
+import { Channel, Client, Collection, Message, TextChannel, VoiceChannel, VoiceConnection } from "discord.js";
 import { readdirSync } from "fs";
 
 import { CONFIG } from "./config";
@@ -40,6 +40,15 @@ export class Bot {
                                     1
                                 );
                             }, (3 * 60 + 58) * 1000);
+                        });
+                    } else {
+                        this.client.channels.forEach((chan: Channel) => {
+                            if (chan.id === "428386268817260545") {     // canal-para-putos
+                                const ch = chan as TextChannel;
+                                ch.send(
+                                    "Debería darles vergüenza no estar presentes para entonar las estrofas de nuestro gran himno nacional."
+                                );
+                            }
                         });
                     }
                 }
