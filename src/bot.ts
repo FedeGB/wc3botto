@@ -9,6 +9,8 @@ import { IController } from "./models/controller";
 import { IResponse } from "./models/response";
 
 export class Bot {
+    private readonly ANTHEM_DURATION = 3 * 60 + 58;     // Anthem duration in secs
+
     private client: Client;
     private controllers: Collection<string, IController>;
     private channelsPlayingAnthemAt: string[] = [];
@@ -66,8 +68,8 @@ export class Bot {
                             voiceChannel.members.forEach((user) => {
                                 const listener: IListeningAnthemUser = {
                                     listeningStartTime: 0,
+                                    pctgListened: 0,
                                     quitted: false,
-                                    totalListenedTime: 0,
                                     userAlias: user.nickname,
                                     userId: user.id,
                                 };
@@ -91,10 +93,11 @@ export class Bot {
 
                                 // Handle anthem listeners
                                 anthemListeners.forEach((listener) => {
-                                    listener.totalListenedTime += 3 * 60 + 58 - listener.listeningStartTime;
+                                    listener.pctgListened += (this.ANTHEM_DURATION - listener.listeningStartTime)
+                                        / this.ANTHEM_DURATION;
                                 });
                                 // MongoDBManager.save(anthemListeners)
-                            }, (3 * 60 + 58) * 1000);
+                            }, this.ANTHEM_DURATION * 1000);
                         });
                     } else {
                         this.client.channels.forEach((chan: Channel) => {
