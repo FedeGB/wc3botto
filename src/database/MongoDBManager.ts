@@ -25,7 +25,16 @@ class MongoDBManager {
         }
 
         listeners.forEach((listener) => {
-            AnthemListenerModel.findOne({ userId: listener.userId }, (err: Error, anthemListener: IAnthemListener) => {
+            AnthemListenerModel.update({ userId: listener.userId }, {
+                $inc: listener.quitted ? { quitted: 1 } : { timesHeard: listener.pctgListened },
+                $set: { userAlias: listener.userAlias },
+            }, { upsert: true, setDefaultsOnInsert: true }, (err: Error, raw) => {
+                if (err) {
+                    logger.error(`There was an error updating the DB. Error: ${err.message}`);
+                }
+            });
+
+            /* AnthemListenerModel.findOne({ userId: listener.userId }, (err: Error, anthemListener: IAnthemListener) => {
                 if (err) {
                     logger.error(`There was a problem finding the anthem listener. Error:  ${err.message}`);
                     return;
@@ -35,8 +44,8 @@ class MongoDBManager {
                     anthemListener.userAlias = listener.userAlias;
                     anthemListener.timesHeard += listener.pctgListened;
                 }
-            })
-        })
+            }) */
+        });
     }
 }
 

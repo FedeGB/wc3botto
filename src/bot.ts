@@ -2,6 +2,7 @@ import { Channel, Client, Collection, Message, TextChannel, VoiceChannel, VoiceC
 import { readdirSync } from "fs";
 
 import { CONFIG } from "./config";
+import { DBManager } from "./database/MongoDBManager";
 import { playAudioFile } from "./helpers/playAudioFile.helper";
 import { logger } from "./logger";
 import { IListeningAnthemUser } from "./models/anthem-listener";
@@ -9,7 +10,7 @@ import { IController } from "./models/controller";
 import { IResponse } from "./models/response";
 
 export class Bot {
-    private readonly ANTHEM_DURATION = 3 * 60 + 58;     // Anthem duration in secs
+    private readonly ANTHEM_DURATION = 3 * 60 + 58; // Anthem duration in secs
 
     private client: Client;
     private controllers: Collection<string, IController>;
@@ -43,6 +44,58 @@ export class Bot {
             response.controller.execute(response.processedMsg, this, response.msgArgs);
         });
 
+        this.client.on("voiceStateUpdate", (oldMember, newMember) => {
+            if (this.channelsPlayingAnthemAt.length === 0) {
+                return;
+            }
+
+            if (
+                // If user exited channel or deafened himself
+                (oldMember.voiceChannel &&
+                    this.channelsPlayingAnthemAt.indexOf(oldMember.voiceChannel.id) !== -1 &&
+                    (!newMember.voiceChannel ||
+                        this.channelsPlayingAnthemAt.indexOf(newMember.voiceChannel.id) === -1)) ||
+                (!oldMember.selfDeaf && newMember.selfDeaf)
+            ) {
+                const listeners = this.anthemListeners.get(oldMember.voiceChannel.id);
+                if (listeners) {
+                    const listener = listeners.find((value) => value.userId === oldMember.id);
+                    if (listener) {
+                        const now = new Date();
+                        listener.quitted = true;
+                        listener.pctgListened +=
+                            (now.getUTCMinutes() * 60 + now.getUTCSeconds() - listener.listeningStartTime) /
+                            this.ANTHEM_DURATION;
+                    }
+                }
+            } else if (
+                // If user has entered the channel while anthem is playing, or undefeanded himself
+                ((!oldMember.voiceChannel || this.channelsPlayingAnthemAt.indexOf(oldMember.voiceChannel.id) === -1) &&
+                newMember.voiceChannel &&
+                this.channelsPlayingAnthemAt.indexOf(newMember.voiceChannel.id) !== -1) ||
+                (oldMember.selfDeaf && !newMember.selfDeaf)
+            ) {
+                const listeners = this.anthemListeners.get(newMember.voiceChannel.id);
+                if (listeners) {
+                    let listener = listeners.find((elem) => elem.userId === newMember.id);
+                    const now = new Date();
+                    const secondsSinceStart = now.getUTCMinutes() * 60 + now.getUTCSeconds();
+                    if (!listener) {
+                        listener = {
+                            listeningStartTime: secondsSinceStart,
+                            pctgListened: 0,
+                            quitted: false,
+                            userAlias: newMember.nickname,
+                            userId: newMember.id,
+                        };
+                        listeners.push(listener);
+                    }
+                    listener.quitted = false;
+                    listener.listeningStartTime = secondsSinceStart;
+                }
+            }
+        });
+
         this.controllers = initControllers();
     }
 
@@ -66,21 +119,22 @@ export class Bot {
                             const anthemListeners: IListeningAnthemUser[] = new Array(voiceChannel.members.size);
 
                             voiceChannel.members.forEach((user) => {
-                                const listener: IListeningAnthemUser = {
-                                    listeningStartTime: 0,
-                                    pctgListened: 0,
-                                    quitted: false,
-                                    userAlias: user.nickname,
-                                    userId: user.id,
-                                };
-                                anthemListeners.push(listener);
+                                if (!user.selfDeaf) {
+                                    const listener: IListeningAnthemUser = {
+                                        listeningStartTime: 0,
+                                        pctgListened: 0,
+                                        quitted: false,
+                                        userAlias: user.nickname,
+                                        userId: user.id
+                                    };
+                                    anthemListeners.push(listener);
+                                }
                             });
                             this.anthemListeners.set(voiceChannel.id, anthemListeners);
 
                             this.channelsPlayingAnthemAt.push(voiceChannel.id);
                             const dispatcher = playAudioFile(voiceConnection, "himno-arg.mp3", 0.25);
                             this.client.setTimeout(() => {
-
                                 // Stop playing and disconnect from voice channel
                                 dispatcher.end();
                                 voiceConnection.disconnect();
@@ -93,10 +147,11 @@ export class Bot {
 
                                 // Handle anthem listeners
                                 anthemListeners.forEach((listener) => {
-                                    listener.pctgListened += (this.ANTHEM_DURATION - listener.listeningStartTime)
-                                        / this.ANTHEM_DURATION;
+                                    listener.pctgListened +=
+                                        (this.ANTHEM_DURATION - listener.listeningStartTime) / this.ANTHEM_DURATION;
                                 });
-                                // MongoDBManager.save(anthemListeners)
+
+                                DBManager.saveListeners(anthemListeners);
                             }, this.ANTHEM_DURATION * 1000);
                         });
                     } else {
