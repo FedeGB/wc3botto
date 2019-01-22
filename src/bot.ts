@@ -1,4 +1,4 @@
-import { Channel, Client, Collection, Message, TextChannel, VoiceChannel, VoiceConnection } from "discord.js";
+import { Channel, Client, Collection, Guild, Message, TextChannel, VoiceChannel, VoiceConnection } from "discord.js";
 import { readdirSync } from "fs";
 
 import { CONFIG } from "./config";
@@ -15,7 +15,7 @@ export class Bot {
     private readonly ANTHEM_DURATION = 3 * 60 + 58; // Anthem duration in secs
 
     private controllers: Collection<string, IController>;
-    private channelsPlayingAnthemAt: string[] = [];
+    private guildsPlayingAnthemAt: string[] = [];
     private anthemListeners: Collection<string, IListeningAnthemUser[]> = new Collection();
 
     constructor() {
@@ -46,19 +46,22 @@ export class Bot {
         });
 
         this.client.on("voiceStateUpdate", (oldMember, newMember) => {
-            if (this.channelsPlayingAnthemAt.length === 0) {
+            if (this.guildsPlayingAnthemAt.length === 0) {
                 return;
             }
 
+            const voiceConnection = this.client.voiceConnections.get(newMember.guild.id);
+            if (!voiceConnection) {
+                return;
+            }
+
+            const botVoiceChannel = voiceConnection.channel;
             if (
                 // If user exited channel or deafened himself
-                (oldMember.voiceChannel &&
-                    this.channelsPlayingAnthemAt.indexOf(oldMember.voiceChannel.id) !== -1 &&
-                    (!newMember.voiceChannel ||
-                        this.channelsPlayingAnthemAt.indexOf(newMember.voiceChannel.id) === -1)) ||
+                (oldMember.voiceChannelID === botVoiceChannel.id && newMember.voiceChannelID !== botVoiceChannel.id) ||
                 (!oldMember.selfDeaf && newMember.selfDeaf)
             ) {
-                const listeners = this.anthemListeners.get(oldMember.voiceChannel.id);
+                const listeners = this.anthemListeners.get(oldMember.guild.id);
                 if (listeners) {
                     const listener = listeners.find((value) => value.userId === oldMember.id);
                     if (listener) {
@@ -71,12 +74,10 @@ export class Bot {
                 }
             } else if (
                 // If user has entered the channel while anthem is playing, or undefeanded himself
-                ((!oldMember.voiceChannel || this.channelsPlayingAnthemAt.indexOf(oldMember.voiceChannel.id) === -1) &&
-                    newMember.voiceChannel &&
-                    this.channelsPlayingAnthemAt.indexOf(newMember.voiceChannel.id) !== -1) ||
+                (oldMember.voiceChannelID !== botVoiceChannel.id && newMember.voiceChannelID === botVoiceChannel.id) ||
                 (oldMember.selfDeaf && !newMember.selfDeaf)
             ) {
-                const listeners = this.anthemListeners.get(newMember.voiceChannel.id);
+                const listeners = this.anthemListeners.get(newMember.guild.id);
                 if (listeners) {
                     let listener = listeners.find((elem) => elem.userId === newMember.id);
                     const now = new Date();
@@ -104,8 +105,8 @@ export class Bot {
         this.client.login(token);
     }
 
-    public isPlayingAnthemAtChannel(channelId: string): boolean {
-        return this.channelsPlayingAnthemAt.indexOf(channelId) !== -1;
+    public isPlayingAnthemAtGuild(guildId: string): boolean {
+        return this.guildsPlayingAnthemAt.indexOf(guildId) !== -1;
     }
 
     public scheduleAnthem(): void {
@@ -116,64 +117,87 @@ export class Bot {
         argTomorrow.setUTCHours(0, 0, 0, 0);
 
         this.client.setTimeout(() => {
-            this.client.channels.forEach((channel: Channel) => {
-                if (channel.type === "voice") {
-                    const voiceChannel: VoiceChannel = channel as VoiceChannel;
-                    if (voiceChannel.members.size > 0) {
-                        voiceChannel.join().then((voiceConnection: VoiceConnection) => {
-                            const anthemListeners: IListeningAnthemUser[] = new Array(voiceChannel.members.size);
-
-                            voiceChannel.members.forEach((user) => {
-                                if (!user.selfDeaf) {
-                                    const listener: IListeningAnthemUser = {
-                                        listeningStartTime: 0,
-                                        pctgListened: 0,
-                                        quitted: false,
-                                        userAlias: user.nickname,
-                                        userId: user.id
-                                    };
-                                    anthemListeners.push(listener);
-                                }
-                            });
-                            this.anthemListeners.set(voiceChannel.id, anthemListeners);
-
-                            this.channelsPlayingAnthemAt.push(voiceChannel.id);
-                            const dispatcher = playAudioFile(voiceConnection, "himno-arg.mp3", 0.25);
-                            this.client.setTimeout(() => {
-                                // Stop playing and disconnect from voice channel
-                                dispatcher.end();
-                                voiceConnection.disconnect();
-
-                                // Remove from list of channels where anthem is being played
-                                this.channelsPlayingAnthemAt.splice(
-                                    this.channelsPlayingAnthemAt.indexOf(voiceChannel.id),
-                                    1
-                                );
-
-                                // Handle anthem listeners
-                                anthemListeners.forEach((listener) => {
-                                    listener.pctgListened +=
-                                        (this.ANTHEM_DURATION - listener.listeningStartTime) / this.ANTHEM_DURATION;
-                                });
-
-                                DBManager.saveListeners(anthemListeners);
-                            }, this.ANTHEM_DURATION * 1000);
-                        });
-                    } else {
-                        this.client.channels.forEach((chan: Channel) => {
-                            if (chan.id === "428386268817260545") {
-                                // canal-para-putos
-                                const ch = chan as TextChannel;
-                                ch.send(
-                                    "Debería darles vergüenza no estar presentes para entonar las estrofas de nuestro gran himno nacional."
-                                );
-                            }
-                        });
-                    }
-                }
-            });
+            this.playAnthem();
             this.scheduleAnthem();
         }, argTomorrow.valueOf() - argNow.valueOf());
+    }
+
+    public playAnthem(): void {
+        this.client.guilds.forEach((guild: Guild) => {
+            this.playAnthemAtGuild(guild);
+        });
+    }
+
+    public playAnthemAtGuild(guild: Guild): void {
+        const voiceChannel = guild.channels.find((channel) => channel.type === "voice") as VoiceChannel;
+        if (voiceChannel && voiceChannel.members.size > 0) {
+            voiceChannel.join().then((voiceConnection: VoiceConnection) => {
+                const anthemListeners: IListeningAnthemUser[] = new Array(voiceChannel.members.size);
+                voiceChannel.members.forEach((user) => {
+                    if (!user.selfDeaf) {
+                        const listener: IListeningAnthemUser = {
+                            listeningStartTime: 0,
+                            pctgListened: 0,
+                            quitted: false,
+                            userAlias: user.nickname,
+                            userId: user.id
+                        };
+                        anthemListeners.push(listener);
+                    }
+                });
+                this.anthemListeners.set(guild.id, anthemListeners);
+
+                this.guildsPlayingAnthemAt.push(guild.id);
+                const dispatcher = playAudioFile(voiceConnection, "himno-arg.mp3", 0.25);
+                this.client.setTimeout(() => {
+                    this.stopAnthem(guild.id);
+                }, this.ANTHEM_DURATION * 1000);
+            });
+        } else {
+            this.client.channels.forEach((chan: Channel) => {
+                if (chan.id === "428386268817260545") {
+                    // canal-para-putos
+                    const ch = chan as TextChannel;
+                    ch.send(
+                        "Debería darles vergüenza no estar presentes para entonar las estrofas de nuestro gran himno nacional."
+                    );
+                }
+            });
+        }
+    }
+
+    public stopAnthem(guildId: string): void {
+        const voiceConnection = this.client.voiceConnections.get(guildId);
+        const dispatcher = voiceConnection ? voiceConnection.dispatcher : undefined;
+
+        if (!voiceConnection) {
+            return;
+        }
+
+        // Stop playing and disconnect from voice channel
+        if (dispatcher) {
+            dispatcher.end();
+        }
+        voiceConnection.disconnect();
+
+        // Remove from list of channels where anthem is being played
+        this.guildsPlayingAnthemAt.splice(
+            this.guildsPlayingAnthemAt.indexOf(guildId),
+            1
+        );
+
+        // Handle anthem listeners
+        const anthemListeners = this.anthemListeners.get(guildId);
+        if (!anthemListeners) {
+            return;
+        }
+
+        anthemListeners.forEach((listener) => {
+            listener.pctgListened +=
+                (this.ANTHEM_DURATION - listener.listeningStartTime) / this.ANTHEM_DURATION;
+        });
+
+        DBManager.saveListeners(anthemListeners);
     }
 
     public handleMessage(message: Message): IResponse | null {

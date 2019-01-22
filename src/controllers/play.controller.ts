@@ -14,7 +14,7 @@ const playController: IController = {
             return;
         }
 
-        if (bot.isPlayingAnthemAtChannel(message.member.voiceChannelID)) {
+        if (bot.isPlayingAnthemAtGuild(message.member.guild.id)) {
             message.reply(
                 "No se puede reproducir otra cosa hasta que no termine el gran himno de todos los argentinos."
             );

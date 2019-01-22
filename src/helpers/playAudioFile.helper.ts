@@ -13,7 +13,7 @@ export const playAudioFile = (
     });
 
     dispatcher.on("error", (error: Error) => {
-        logger.log("error", error.message);
+        logger.error(error.message);
     });
 
     return dispatcher;

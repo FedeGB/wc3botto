@@ -13,7 +13,7 @@ const stopController: IController = {
             return;
         }
 
-        if (bot.isPlayingAnthemAtChannel(message.member.voiceChannelID)) {
+        if (bot.isPlayingAnthemAtGuild(message.member.guild.id)) {
             message.reply("¿Cómo osas intentar detener el himno de nuestra querida nación? Maldito vende patria.");
             return;
         }
