@@ -1,7 +1,7 @@
 import * as mongoose from "mongoose";
 
 import { logger } from "../logger";
-import { IListeningAnthemUser, IAnthemListener, AnthemListenerModel } from '../models/anthem-listener';
+import { AnthemListenerModel, IListeningAnthemUser } from "../models/anthem-listener";
 
 class MongoDBManager {
     private db: mongoose.Connection;
@@ -25,26 +25,19 @@ class MongoDBManager {
         }
 
         listeners.forEach((listener) => {
-            AnthemListenerModel.update({ userId: listener.userId }, {
-                $inc: listener.quitted ? { quitted: 1 } : { timesHeard: listener.pctgListened },
-                $set: { userAlias: listener.userAlias },
-            }, { upsert: true, setDefaultsOnInsert: true }, (err: Error, raw) => {
-                if (err) {
-                    logger.error(`There was an error updating the DB. Error: ${err.message}`);
+            AnthemListenerModel.update(
+                { userId: listener.userId },
+                {
+                    $inc: listener.quitted ? { quitted: 1 } : { timesHeard: listener.pctgListened },
+                    $set: { userAlias: listener.userAlias }
+                },
+                { upsert: true, setDefaultsOnInsert: true },
+                (err: Error, raw) => {
+                    if (err) {
+                        logger.error(`There was an error updating the DB. Error: ${err.message}`);
+                    }
                 }
-            });
-
-            /* AnthemListenerModel.findOne({ userId: listener.userId }, (err: Error, anthemListener: IAnthemListener) => {
-                if (err) {
-                    logger.error(`There was a problem finding the anthem listener. Error:  ${err.message}`);
-                    return;
-                }
-
-                if (anthemListener) {
-                    anthemListener.userAlias = listener.userAlias;
-                    anthemListener.timesHeard += listener.pctgListened;
-                }
-            }) */
+            );
         });
     }
 }

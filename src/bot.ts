@@ -10,9 +10,10 @@ import { IController } from "./models/controller";
 import { IResponse } from "./models/response";
 
 export class Bot {
+    public readonly client: Client;
+
     private readonly ANTHEM_DURATION = 3 * 60 + 58; // Anthem duration in secs
 
-    private client: Client;
     private controllers: Collection<string, IController>;
     private channelsPlayingAnthemAt: string[] = [];
     private anthemListeners: Collection<string, IListeningAnthemUser[]> = new Collection();
@@ -21,16 +22,16 @@ export class Bot {
         this.client = new Client();
 
         this.client.on("ready", () => {
-            logger.log("info", `Logged in as ${this.client.user.tag}`);
+            logger.info(`Logged in as ${this.client.user.tag}`);
             this.scheduleAnthem();
         });
 
         this.client.on("error", (error: Error) => {
-            logger.log("error", error.message);
+            logger.error(error.message);
         });
 
         this.client.on("disconnect", (event) => {
-            logger.log("info", `Bot disconnected. Code: ${event.code} - Description: ${event.description}`);
+            logger.info(`Bot disconnected. Code: ${event.code} - Description: ${event.description}`);
             this.client.login(CONFIG.token);
         });
 
@@ -71,8 +72,8 @@ export class Bot {
             } else if (
                 // If user has entered the channel while anthem is playing, or undefeanded himself
                 ((!oldMember.voiceChannel || this.channelsPlayingAnthemAt.indexOf(oldMember.voiceChannel.id) === -1) &&
-                newMember.voiceChannel &&
-                this.channelsPlayingAnthemAt.indexOf(newMember.voiceChannel.id) !== -1) ||
+                    newMember.voiceChannel &&
+                    this.channelsPlayingAnthemAt.indexOf(newMember.voiceChannel.id) !== -1) ||
                 (oldMember.selfDeaf && !newMember.selfDeaf)
             ) {
                 const listeners = this.anthemListeners.get(newMember.voiceChannel.id);
@@ -86,7 +87,7 @@ export class Bot {
                             pctgListened: 0,
                             quitted: false,
                             userAlias: newMember.nickname,
-                            userId: newMember.id,
+                            userId: newMember.id
                         };
                         listeners.push(listener);
                     }
@@ -101,6 +102,10 @@ export class Bot {
 
     public login(token: string): void {
         this.client.login(token);
+    }
+
+    public isPlayingAnthemAtChannel(channelId: string): boolean {
+        return this.channelsPlayingAnthemAt.indexOf(channelId) !== -1;
     }
 
     public scheduleAnthem(): void {
@@ -226,7 +231,11 @@ const initControllers = () => {
     const controllers = new Collection<string, IController>();
 
     for (const file of controllerFiles) {
-        if (file.endsWith(".map") || file === "controller.js") {
+        if (
+            file.endsWith(".map") ||
+            file === "controller.js" ||
+            (CONFIG.env !== "production" && file === "test.controller.js")
+        ) {
             continue;
         }
         const filePath = `./controllers/${file}`.replace(".js", "");

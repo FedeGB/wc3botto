@@ -4,12 +4,12 @@ import { Bot } from "../bot";
 import { playAudioFile } from "../helpers/playAudioFile.helper";
 import { IController } from "../models/controller";
 
-const playController: IController = {
-    description: "Reproduce el archivo pedido en el canal de voz.",
-    name: "play",
+const testController: IController = {
+    description: "Para testear el bot",
+    name: "test",
 
     execute(message: Message, bot: Bot, args: string[]): void {
-        if (!message.member.voiceChannel || !bot.client.voiceConnections.get(message.guild.id)) {
+        /* if (!message.member.voiceChannel || !bot.client.voiceConnections.get(message.guild.id)) {
             message.channel.send("Tanto vos como yo tenemos que estar en un canal de voz, querido...");
             return;
         }
@@ -51,8 +51,8 @@ const playController: IController = {
                 default:
                     break;
             }
-        }
+        } */
     }
 };
 
-export = playController;
+export = testController;
