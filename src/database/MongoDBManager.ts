@@ -23,15 +23,15 @@ class MongoDBManager {
         });
     }
 
-    /* public getListeners(callback: (IAnthemListener[]) => void): void {
+    public getListeners(callback: (listeners: IAnthemListener[] | null) => void): void {
         AnthemListenerModel.find((err: Error, listeners: IAnthemListener[]) => {
             if (err) {
-                logger.error(`There was an error getting the listeners. Error ${err.message}.`);
-                return;
+                logger.error(`There was an error retrieving data from the server: Error: ${err.message}`);
+                return callback(null);
             }
             callback(listeners);
         });
-    } */
+    }
 
     public saveListeners(listeners: IListeningAnthemUser[]): void {
         if (!listeners || listeners.length === 0) {
