@@ -4,7 +4,7 @@ export interface IListeningAnthemUser {
     userId: string;
     userAlias: string;
     quitted: boolean;
-    listeningStartTime: number;
+    listeningStartTime: Date;
     pctgListened: number;
 }
 
@@ -24,12 +24,4 @@ const anthemListenerSchema = new Schema({
     userId: { type: String, required: true },
 });
 
-anthemListenerSchema.pre("save", (next) => {
-    this.lastHeard = new Date();
-});
-
-anthemListenerSchema.pre("update", (next) => {
-    this.lastHeard = new Date();
-});
-
-export const AnthemListenerModel = model<IAnthemListener>("anthemListener", anthemListenerSchema);
+export const AnthemListenerModel = model<IAnthemListener>("anthemListener", anthemListenerSchema, "anthem-listeners");

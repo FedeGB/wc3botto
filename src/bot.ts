@@ -65,11 +65,9 @@ export class Bot {
                 if (listeners) {
                     const listener = listeners.find((value) => value.userId === oldMember.id);
                     if (listener) {
-                        const now = new Date();
                         listener.quitted = true;
                         listener.pctgListened +=
-                            (now.getUTCMinutes() * 60 + now.getUTCSeconds() - listener.listeningStartTime) /
-                            this.ANTHEM_DURATION;
+                            (Date.now() - listener.listeningStartTime.getTime()) / (1000 * this.ANTHEM_DURATION);
                     }
                 }
             } else if (
@@ -80,11 +78,9 @@ export class Bot {
                 const listeners = this.anthemListeners.get(newMember.guild.id);
                 if (listeners) {
                     let listener = listeners.find((elem) => elem.userId === newMember.id);
-                    const now = new Date();
-                    const secondsSinceStart = now.getUTCMinutes() * 60 + now.getUTCSeconds();
                     if (!listener) {
                         listener = {
-                            listeningStartTime: secondsSinceStart,
+                            listeningStartTime: new Date(),
                             pctgListened: 0,
                             quitted: false,
                             userAlias: newMember.nickname,
@@ -93,7 +89,7 @@ export class Bot {
                         listeners.push(listener);
                     }
                     listener.quitted = false;
-                    listener.listeningStartTime = secondsSinceStart;
+                    listener.listeningStartTime = new Date();
                 }
             }
         });
@@ -132,15 +128,15 @@ export class Bot {
         const voiceChannel = guild.channels.find((channel) => channel.type === "voice") as VoiceChannel;
         if (voiceChannel && voiceChannel.members.size > 0) {
             voiceChannel.join().then((voiceConnection: VoiceConnection) => {
-                const anthemListeners: IListeningAnthemUser[] = new Array(voiceChannel.members.size);
-                voiceChannel.members.forEach((user) => {
-                    if (!user.selfDeaf) {
+                const anthemListeners: IListeningAnthemUser[] = [];
+                voiceChannel.members.forEach((guildMember) => {
+                    if (!guildMember.selfDeaf && !guildMember.user.bot) {
                         const listener: IListeningAnthemUser = {
-                            listeningStartTime: 0,
+                            listeningStartTime: new Date(),
                             pctgListened: 0,
                             quitted: false,
-                            userAlias: user.nickname,
-                            userId: user.id
+                            userAlias: guildMember.user.username,
+                            userId: guildMember.id
                         };
                         anthemListeners.push(listener);
                     }
@@ -181,10 +177,7 @@ export class Bot {
         voiceConnection.disconnect();
 
         // Remove from list of channels where anthem is being played
-        this.guildsPlayingAnthemAt.splice(
-            this.guildsPlayingAnthemAt.indexOf(guildId),
-            1
-        );
+        this.guildsPlayingAnthemAt.splice(this.guildsPlayingAnthemAt.indexOf(guildId), 1);
 
         // Handle anthem listeners
         const anthemListeners = this.anthemListeners.get(guildId);
@@ -194,7 +187,7 @@ export class Bot {
 
         anthemListeners.forEach((listener) => {
             listener.pctgListened +=
-                (this.ANTHEM_DURATION - listener.listeningStartTime) / this.ANTHEM_DURATION;
+                (Date.now() - listener.listeningStartTime.getTime()) / (1000 * this.ANTHEM_DURATION);
         });
 
         DBManager.saveListeners(anthemListeners);
@@ -227,7 +220,7 @@ export class Bot {
         controllerName = controllerName.toLowerCase();
 
         if (CONFIG.env !== "production") {
-            if (!controllerName.endsWith("-dev")) {
+            if (!controllerName.endsWith("-dev") && controllerName !== "test") {
                 return null;
             }
 
@@ -258,7 +251,7 @@ const initControllers = () => {
         if (
             file.endsWith(".map") ||
             file === "controller.js" ||
-            (CONFIG.env !== "production" && file === "test.controller.js")
+            (CONFIG.env === "production" && file === "test.controller.js")
         ) {
             continue;
         }

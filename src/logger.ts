@@ -28,7 +28,8 @@ export const logger = Winston.createLogger({
 if (isDev) {
     logger.add(
         new Winston.transports.Console({
-            format: Winston.format.colorize()
+            format: Winston.format.colorize(),
+            level: "debug"
         })
     );
 }

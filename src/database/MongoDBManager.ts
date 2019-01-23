@@ -1,13 +1,17 @@
-import * as mongoose from "mongoose";
+import mongoose from "mongoose";
 
+import { CONFIG } from "../config";
 import { logger } from "../logger";
-import { AnthemListenerModel, IListeningAnthemUser } from "../models/anthem-listener";
+import { AnthemListenerModel, IListeningAnthemUser, IAnthemListener } from "../models/anthem-listener";
 
 class MongoDBManager {
     private db: mongoose.Connection;
 
     constructor() {
-        mongoose.connect(`mongodb+srv://jereaa:hvpYbutlJEhOxiiQ@wc3botto-o9bbu.gcp.mongodb.net/wc3botto`);
+        mongoose.connect(
+            `mongodb+srv://${CONFIG.dbUser}:${CONFIG.dbPass}@wc3botto-o9bbu.gcp.mongodb.net/wc3botto`,
+            { useNewUrlParser: true }
+        );
         this.db = mongoose.connection;
 
         this.db.on("error", (error: Error) => {
@@ -19,22 +23,32 @@ class MongoDBManager {
         });
     }
 
+    /* public getListeners(callback: (IAnthemListener[]) => void): void {
+        AnthemListenerModel.find((err: Error, listeners: IAnthemListener[]) => {
+            if (err) {
+                logger.error(`There was an error getting the listeners. Error ${err.message}.`);
+                return;
+            }
+            callback(listeners);
+        });
+    } */
+
     public saveListeners(listeners: IListeningAnthemUser[]): void {
         if (!listeners || listeners.length === 0) {
             return;
         }
 
         listeners.forEach((listener) => {
-            AnthemListenerModel.update(
+            AnthemListenerModel.updateMany(
                 { userId: listener.userId },
                 {
-                    $inc: listener.quitted ? { quitted: 1 } : { timesHeard: listener.pctgListened },
-                    $set: { userAlias: listener.userAlias }
+                    $inc: listener.quitted ? { quitTimes: 1 } : { timesHeard: listener.pctgListened },
+                    $set: { userAlias: listener.userAlias, lastHeard: new Date() }
                 },
                 { upsert: true, setDefaultsOnInsert: true },
                 (err: Error, raw) => {
                     if (err) {
-                        logger.error(`There was an error updating the DB. Error: ${err.message}`);
+                        logger.error(`There was an error updating the DB. Error: ${err.message}.`);
                     }
                 }
             );
