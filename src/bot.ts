@@ -191,7 +191,7 @@ export class Bot {
         });
 
         DBManager.saveListeners(anthemListeners, () => {
-            this.showStatsAtChannel(this.client.channels.get("537763666234441742") as TextChannel);
+            this.showStatsAtChannel(this.client.channels.get("428386268817260545") as TextChannel); // TODO: Que se pueda setear por comando
         });
     }
 
