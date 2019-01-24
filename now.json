@@ -1,0 +1,12 @@
+{
+	"files": [
+		"dist",
+		"assets",
+		"src",
+		"package-lock.json"
+	],
+	"type": "npm",
+	"engines": {
+		"node": "8.11.4"
+	}
+}

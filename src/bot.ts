@@ -5,7 +5,7 @@ import { CONFIG } from "./config";
 import { DBManager } from "./database/MongoDBManager";
 import { playAudioFile } from "./helpers/playAudioFile.helper";
 import { logger } from "./logger";
-import { IListeningAnthemUser, IAnthemListener } from "./models/anthem-listener";
+import { IAnthemListener, IListeningAnthemUser } from "./models/anthem-listener";
 import { IController } from "./models/controller";
 import { IResponse } from "./models/response";
 

@@ -48,6 +48,10 @@ const playController: IController = {
                     playAudioFile(voiceConnection, "bad.mp3", 0.5);
                     break;
 
+                case "patria":
+                    playAudioFile(voiceConnection, "patria.mp3", 0.4);
+                    break;
+
                 default:
                     break;
             }

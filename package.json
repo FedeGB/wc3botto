@@ -2,7 +2,7 @@
   "name": "wc3botto",
   "version": "1.0.0",
   "description": "Wc3 tiene bot de discord",
-  "main": "./dist/bot.js",
+  "main": "./dist/app.js",
   "author": "Verrigombia",
   "license": "MIT",
   "repository": {
@@ -17,7 +17,6 @@
   "scripts": {
     "start": "node ./dist/app.js",
     "dev": "node -r dotenv/config ./dist/app.js",
-    "postinstall": "tsc",
     "build": "tsc"
   },
   "dependencies": {
