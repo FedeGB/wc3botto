@@ -5,7 +5,7 @@ import { CONFIG } from "./config";
 import { DBManager } from "./database/MongoDBManager";
 import { playAudioFile } from "./helpers/playAudioFile.helper";
 import { logger } from "./logger";
-import { IListeningAnthemUser } from "./models/anthem-listener";
+import { IListeningAnthemUser, IAnthemListener } from "./models/anthem-listener";
 import { IController } from "./models/controller";
 import { IResponse } from "./models/response";
 
@@ -190,7 +190,35 @@ export class Bot {
                 (Date.now() - listener.listeningStartTime.getTime()) / (1000 * this.ANTHEM_DURATION);
         });
 
-        DBManager.saveListeners(anthemListeners);
+        DBManager.saveListeners(anthemListeners, () => {
+            this.showStatsAtChannel(this.client.channels.get("537763666234441742") as TextChannel);
+        });
+    }
+
+    public showStatsAtChannel(channel: TextChannel): void {
+        DBManager.getListeners((listeners) => {
+            if (!listeners) {
+                return;
+            }
+
+            this.sendAnthemStatsToChannel(listeners, channel);
+        });
+    }
+
+    public sendAnthemStatsToChannel(listeners: IAnthemListener[], channel: TextChannel) {
+        listeners.sort((a, b) => {
+            const timeDiff = Math.round(b.timesHeard * 100) / 100 - Math.round(a.timesHeard * 100) / 100;
+            return timeDiff === 0 ? a.quitTimes - b.quitTimes : timeDiff;
+        });
+
+        let resultStr = "Ranking patriota:\n\n";
+        listeners.forEach((listener) => {
+            resultStr += `${listener.userAlias}: ${Math.round(listener.timesHeard * 100) / 100} veces escuchado y ${
+                listener.quitTimes
+            } ha quitteado.\n`;
+        });
+
+        channel.send(resultStr, { code: true });
     }
 
     public handleMessage(message: Message): IResponse | null {
@@ -203,9 +231,11 @@ export class Bot {
             if (lowerCaseMsg.includes("punto")) {
                 message.reply("*puto");
             } else if (lowerCaseMsg.includes("verga")) {
-                message.channel.send("Jejeje, dijo verga.");
+                message.channel.send("Jejeje, dijo verga dura.");
             } else if (lowerCaseMsg.includes("pito")) {
                 message.channel.send("Jejeje, dijo pito.");
+            } else if (lowerCaseMsg.includes("culo")) {
+                message.channel.send("Jejeje, dijo culo.");
             }
 
             return null;

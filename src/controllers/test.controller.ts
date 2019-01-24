@@ -2,7 +2,6 @@ import { Message } from "discord.js";
 
 import { Bot } from "../bot";
 import { IController } from "../models/controller";
-import { logger } from '../logger';
 
 const testController: IController = {
     description: "Para testear el bot",
@@ -11,7 +10,6 @@ const testController: IController = {
     execute(message: Message, bot: Bot, args: string[]): void {
         switch (args[0]) {
             case "play-anthem":
-                logger.info("Trying to play anthem...");
                 bot.playAnthemAtGuild(message.guild);
                 break;
 

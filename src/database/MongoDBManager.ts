@@ -2,16 +2,13 @@ import mongoose from "mongoose";
 
 import { CONFIG } from "../config";
 import { logger } from "../logger";
-import { AnthemListenerModel, IListeningAnthemUser, IAnthemListener } from "../models/anthem-listener";
+import { AnthemListenerModel, IAnthemListener, IListeningAnthemUser } from "../models/anthem-listener";
 
 class MongoDBManager {
     private db: mongoose.Connection;
 
     constructor() {
-        mongoose.connect(
-            `mongodb+srv://${CONFIG.dbUser}:${CONFIG.dbPass}@wc3botto-o9bbu.gcp.mongodb.net/wc3botto`,
-            { useNewUrlParser: true }
-        );
+        mongoose.connect(CONFIG.dbUri, { useNewUrlParser: true });
         this.db = mongoose.connection;
 
         this.db.on("error", (error: Error) => {
@@ -33,13 +30,14 @@ class MongoDBManager {
         });
     }
 
-    public saveListeners(listeners: IListeningAnthemUser[]): void {
+    public saveListeners(listeners: IListeningAnthemUser[], callback?: () => void): void {
         if (!listeners || listeners.length === 0) {
             return;
         }
 
+        let updatedUsers = 0;
         listeners.forEach((listener) => {
-            AnthemListenerModel.updateMany(
+            AnthemListenerModel.updateOne(
                 { userId: listener.userId },
                 {
                     $inc: listener.quitted ? { quitTimes: 1 } : { timesHeard: listener.pctgListened },
@@ -47,8 +45,14 @@ class MongoDBManager {
                 },
                 { upsert: true, setDefaultsOnInsert: true },
                 (err: Error, raw) => {
+                    updatedUsers++;
                     if (err) {
                         logger.error(`There was an error updating the DB. Error: ${err.message}.`);
+                        return;
+                    }
+
+                    if (callback && updatedUsers === listeners.length) {
+                        callback();
                     }
                 }
             );
