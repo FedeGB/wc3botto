@@ -14,9 +14,11 @@ export interface IAnthemListener extends Document {
     timesHeard: number;
     lastHeard: Date;
     quitTimes: number;
+    guildId: string;
 }
 
 const anthemListenerSchema = new Schema({
+    guildId: { type: String },
     lastHeard: { type: Date, default: Date.now },
     quitTimes: { type: Number, default: 0 },
     timesHeard: { type: Number, default: 0 },

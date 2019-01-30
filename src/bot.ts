@@ -1,5 +1,6 @@
 import { Channel, Client, Collection, Guild, Message, TextChannel, VoiceChannel, VoiceConnection } from "discord.js";
 import { readdirSync } from "fs";
+import { table } from "table";
 
 import { CONFIG } from "./config";
 import { DBManager } from "./database/MongoDBManager";
@@ -135,7 +136,7 @@ export class Bot {
                             listeningStartTime: new Date(),
                             pctgListened: 0,
                             quitted: false,
-                            userAlias: guildMember.user.username,
+                            userAlias: guildMember.displayName,
                             userId: guildMember.id
                         };
                         anthemListeners.push(listener);
@@ -144,7 +145,7 @@ export class Bot {
                 this.anthemListeners.set(guild.id, anthemListeners);
 
                 this.guildsPlayingAnthemAt.push(guild.id);
-                const dispatcher = playAudioFile(voiceConnection, "himno-arg.mp3", 0.25);
+                playAudioFile(voiceConnection, "himno-arg.mp3", 0.25);
                 this.client.setTimeout(() => {
                     this.stopAnthem(guild.id);
                 }, this.ANTHEM_DURATION * 1000);
@@ -190,13 +191,13 @@ export class Bot {
                 (Date.now() - listener.listeningStartTime.getTime()) / (1000 * this.ANTHEM_DURATION);
         });
 
-        DBManager.saveListeners(anthemListeners, () => {
+        DBManager.saveListeners(anthemListeners, guildId, () => {
             this.showStatsAtChannel(this.client.channels.get("428386268817260545") as TextChannel); // TODO: Que se pueda setear por comando
         });
     }
 
     public showStatsAtChannel(channel: TextChannel): void {
-        DBManager.getListeners((listeners) => {
+        DBManager.getListeners(channel.guild.id, (listeners) => {
             if (!listeners) {
                 return;
             }
@@ -212,10 +213,26 @@ export class Bot {
         });
 
         let resultStr = "Ranking patriota:\n\n";
+
+        const data = [["Patriota", "Veces escuchado", "Veces quitteado"]];
+
         listeners.forEach((listener) => {
-            resultStr += `${listener.userAlias}: ${Math.round(listener.timesHeard * 100) / 100} veces escuchado y ${
-                listener.quitTimes
-            } ha quitteado.\n`;
+            data.push([listener.userAlias, listener.timesHeard.toString(), listener.quitTimes.toString()]);
+        });
+
+        resultStr += table(data, {
+            columnCount: 3,
+            columnDefault: {
+                alignment: "center",
+                width: 12,
+                wrapWord: true
+            },
+            columns: {
+                0: {
+                    alignment: "left",
+                    width: 20
+                }
+            }
         });
 
         channel.send(resultStr, { code: true });

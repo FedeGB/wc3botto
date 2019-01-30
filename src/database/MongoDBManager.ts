@@ -8,7 +8,10 @@ class MongoDBManager {
     private db: mongoose.Connection;
 
     constructor() {
-        mongoose.connect(CONFIG.dbUri, { useNewUrlParser: true });
+        mongoose.connect(
+            CONFIG.dbUri,
+            { useNewUrlParser: true }
+        );
         this.db = mongoose.connection;
 
         this.db.on("error", (error: Error) => {
@@ -20,8 +23,8 @@ class MongoDBManager {
         });
     }
 
-    public getListeners(callback: (listeners: IAnthemListener[] | null) => void): void {
-        AnthemListenerModel.find((err: Error, listeners: IAnthemListener[]) => {
+    public getListeners(guildId: string, callback: (listeners: IAnthemListener[] | null) => void): void {
+        AnthemListenerModel.find({ guildId }, (err: Error, listeners: IAnthemListener[]) => {
             if (err) {
                 logger.error(`There was an error retrieving data from the server: Error: ${err.message}`);
                 return callback(null);
@@ -30,18 +33,19 @@ class MongoDBManager {
         });
     }
 
-    public saveListeners(listeners: IListeningAnthemUser[], callback?: () => void): void {
+    public saveListeners(listeners: IListeningAnthemUser[], guildId: string, callback?: () => void): void {
         if (!listeners || listeners.length === 0) {
             return;
         }
 
         let updatedUsers = 0;
         listeners.forEach((listener) => {
+            const pctgListened = Math.round(listener.pctgListened * 1000) / 1000;
             AnthemListenerModel.updateOne(
                 { userId: listener.userId },
                 {
-                    $inc: listener.quitted ? { quitTimes: 1 } : { timesHeard: listener.pctgListened },
-                    $set: { userAlias: listener.userAlias, lastHeard: new Date() }
+                    $inc: listener.quitted ? { quitTimes: 1 } : { timesHeard: pctgListened },
+                    $set: { userAlias: listener.userAlias, lastHeard: new Date(), guildId }
                 },
                 { upsert: true, setDefaultsOnInsert: true },
                 (err: Error, raw) => {
