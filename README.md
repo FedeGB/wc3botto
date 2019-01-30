@@ -24,7 +24,7 @@ Remove previous deploy
 
 Set environment constants TOKEN and NODE_ENV
 
-`now -e TOKEN=@token -e NODE_ENV=@node_env`
+`now -e TOKEN=@token -e NODE_ENV=@node_env -e DB_USER=@db_user -e DB_PASS=@db_pass`
 
 `now scale <deploy link> sfo1 1`
 
