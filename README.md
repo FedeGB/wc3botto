@@ -17,8 +17,14 @@ To install and run from Windows, first install [Windows-Build-Tools](https://git
 `npm start`
 
 ## Deploy to ZEIT
+
 tsc  to build files into dist dir
+
 Remove previous deploy
+
 Set environment constants TOKEN and NODE_ENV
+
 `now -e TOKEN=@token -e NODE_ENV=@node_env`
+
 `now scale <deploy link> sfo1 1`
+
