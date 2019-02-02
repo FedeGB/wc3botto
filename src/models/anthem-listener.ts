@@ -6,6 +6,7 @@ export interface IListeningAnthemUser {
     quitted: boolean;
     listeningStartTime: Date;
     pctgListened: number;
+    listeningFromStart: boolean;
 }
 
 export interface IAnthemListener extends Document {

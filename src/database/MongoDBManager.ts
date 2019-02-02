@@ -44,7 +44,7 @@ class MongoDBManager {
             AnthemListenerModel.updateOne(
                 { userId: listener.userId },
                 {
-                    $inc: listener.quitted ? { quitTimes: 1 } : { timesHeard: pctgListened },
+                    $inc: listener.quitted ? { quitTimes: 1 } : { timesHeard: listener.listeningFromStart ? 1 : listener.pctgListened },
                     $set: { userAlias: listener.userAlias, lastHeard: new Date(), guildId }
                 },
                 { upsert: true, setDefaultsOnInsert: true },

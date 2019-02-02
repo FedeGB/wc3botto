@@ -17,7 +17,7 @@
   "scripts": {
     "start": "node ./dist/app.js",
     "dev": "node -r dotenv/config ./dist/app.js",
-    "build": "tsc"
+    "build-dev": "tsc"
   },
   "dependencies": {
     "discord.js": "^11.4.2",

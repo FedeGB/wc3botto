@@ -81,6 +81,7 @@ export class Bot {
                     let listener = listeners.find((elem) => elem.userId === newMember.id);
                     if (!listener) {
                         listener = {
+                            listeningFromStart: false,
                             listeningStartTime: new Date(),
                             pctgListened: 0,
                             quitted: false,
@@ -91,6 +92,7 @@ export class Bot {
                     }
                     listener.quitted = false;
                     listener.listeningStartTime = new Date();
+                    listener.listeningFromStart = false;
                 }
             }
         });
@@ -133,11 +135,12 @@ export class Bot {
                 voiceChannel.members.forEach((guildMember) => {
                     if (!guildMember.selfDeaf && !guildMember.user.bot) {
                         const listener: IListeningAnthemUser = {
+                            listeningFromStart: true,
                             listeningStartTime: new Date(),
                             pctgListened: 0,
                             quitted: false,
                             userAlias: guildMember.displayName,
-                            userId: guildMember.id
+                            userId: guildMember.id,
                         };
                         anthemListeners.push(listener);
                     }
