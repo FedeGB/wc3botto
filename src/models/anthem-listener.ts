@@ -24,7 +24,7 @@ const anthemListenerSchema = new Schema({
     quitTimes: { type: Number, default: 0 },
     timesHeard: { type: Number, default: 0 },
     userAlias: { type: String, required: true },
-    userId: { type: String, required: true },
+    userId: { type: String, required: true, unique: true },
 });
 
 export const AnthemListenerModel = model<IAnthemListener>("anthemListener", anthemListenerSchema, "anthem-listeners");

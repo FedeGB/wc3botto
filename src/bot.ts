@@ -217,10 +217,10 @@ export class Bot {
 
         let resultStr = "Ranking patriota:\n\n";
 
-        const data = [["Patriota", "Veces escuchado", "Veces quitteado"]];
+        const data = [["Patriota", "Puntaje", "Veces quitteado"]];
 
         listeners.forEach((listener) => {
-            data.push([listener.userAlias, listener.timesHeard.toString(), listener.quitTimes.toString()]);
+            data.push([listener.userAlias, (Math.round(listener.timesHeard * 100)).toString(), listener.quitTimes.toString()]);
         });
 
         resultStr += table(data, {
